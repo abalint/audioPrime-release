@@ -1,0 +1,22 @@
+{
+  "yt-dlp": {
+    "darwin_arm64": {
+      "enabled": true,
+      "version": "2026.02.04",
+      "url": "https://github.com/yt-dlp/yt-dlp/releases/download/2026.02.04/yt-dlp_macos",
+      "sha256": "e833b5aa657b2f2b8608442e9afac91374f147cb641301e8fb39a339e2fe3f71"
+    },
+    "linux_x86_64": {
+      "enabled": true,
+      "version": "2026.02.04",
+      "url": "https://github.com/yt-dlp/yt-dlp/releases/download/2026.02.04/yt-dlp_linux",
+      "sha256": "051ed827a836f56772d662c38ebfabd8d613a21a39376737d56893184bcc53f8"
+    },
+    "windows_x86_64": {
+      "enabled": true,
+      "version": "2026.02.04",
+      "url": "https://github.com/yt-dlp/yt-dlp/releases/download/2026.02.04/yt-dlp.exe",
+      "sha256": "78a3ac4cd1eeb681d65e55fc1761ee14c87de8d8699afb09140d1049c15ae006"
+    }
+  }
+}

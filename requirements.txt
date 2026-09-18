@@ -1,0 +1,14 @@
+PySide6>=6.6
+openai>=1.0
+tiktoken>=0.5
+piper-tts>=1.2
+pathvalidate
+yt-dlp>=2024.0
+onnxruntime>=1.16
+genanki>=0.13
+requests>=2.31
+fugashi>=1.3
+unidic-lite>=1.0.8
+simplemma>=0.9
+anthropic>=0.39
+reazonspeech-k2-asr @ git+https://github.com/reazon-research/ReazonSpeech.git#subdirectory=pkg/k2-asr
