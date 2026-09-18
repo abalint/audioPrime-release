@@ -185,6 +185,11 @@ def build() -> Path:
         "--include-package-data=piper",
         # sherpa-onnx data (ReazonSpeech offline transcription)
         "--include-package-data=sherpa_onnx",
+        # openai>=3 and anthropic>=1 import their resources submodules lazily
+        # (importlib under TYPE_CHECKING), which Nuitka cannot trace, so the
+        # bundle ends up without e.g. openai.resources.chat.chat. Include whole.
+        "--include-package=openai",
+        "--include-package=anthropic",
         # unidic_lite uses __file__ to locate its dicdir/ — must be source, not compiled
         "--nofollow-import-to=unidic_lite",
         # Name the output executable

@@ -27,7 +27,7 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 # yt-dlp: always fetched at latest (sites change frequently, pinning breaks quickly)
 QJS_VERSION = "v0.12.1"
-# ffmpeg: evermeet.cx (macOS), johnvansickle.com (Linux)
+# ffmpeg: martin-riedl.de (macOS arm64), evermeet.cx (macOS x86_64), johnvansickle.com (Linux)
 
 # ---------------------------------------------------------------------------
 # URL helpers
@@ -65,7 +65,16 @@ def _qjs_url(plat: str) -> str:
 
 def _ffmpeg_urls(plat: str) -> list[tuple[str, str]]:
     """Return list of (url, archive_format) for ffmpeg and ffprobe."""
-    if plat.startswith("darwin"):
+    if plat == "darwin_arm64":
+        # evermeet.cx only ships x86_64 builds, which macOS runs under Rosetta
+        # and flags with the "support for Intel-based apps is ending" notice.
+        # martin-riedl.de publishes native Apple Silicon static builds.
+        base = "https://ffmpeg.martin-riedl.de/redirect/latest/macos/arm64/release"
+        return [
+            (f"{base}/ffmpeg.zip", "zip"),
+            (f"{base}/ffprobe.zip", "zip"),
+        ]
+    elif plat.startswith("darwin"):
         return [
             ("https://evermeet.cx/ffmpeg/getrelease/zip", "zip"),        # ffmpeg
             ("https://evermeet.cx/ffmpeg/getrelease/ffprobe/zip", "zip"),  # ffprobe

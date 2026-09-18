@@ -154,11 +154,13 @@ def _chat_completion(api_key, model, messages, max_tokens, temperature, logger=N
                         system_content = msg["content"]
                     else:
                         user_messages.append(msg)
+                # No temperature: anthropic>=1.0 removed it from
+                # messages.create() (TypeError), and Claude 4.7+ models reject
+                # it server-side anyway.
                 kwargs = dict(
                     model=model,
                     messages=user_messages,
                     max_tokens=max_tokens,
-                    temperature=temperature,
                 )
                 if system_content:
                     kwargs["system"] = system_content
