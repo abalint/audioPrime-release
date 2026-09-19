@@ -17,7 +17,6 @@ bin/
 models/
 plans/
 nuitka-crash-report.xml
-data/irasutoya/
 .claude/
 _build_only.bat
 _detached_build.bat

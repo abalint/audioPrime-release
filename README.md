@@ -69,7 +69,7 @@ All core features are implemented and functional:
 - **Cache Management**: Clear intermediate files with one click
 - **Update Checker**: Built-in update notification system
 - **Safe Hotfix Updates**: Optional SHA-256 verified `yt-dlp` binary updates from a manifest
-- **Comprehensive Logging**: Per-run logs saved to .work/logs/ for debugging
+- **Comprehensive Logging**: Per-run logs saved to `logs/` for debugging
 - **Binary Bundling**: Automatic platform-specific binary resolution
 
 ### UI/UX
@@ -374,7 +374,7 @@ The pipeline runs automatically through these steps:
    - Each card contains source-language sentence + audio clip
    - Deterministic IDs allow updates across multiple runs
 
-All steps cache their outputs, so re-running with the same video skips completed work. Check `.work/` directory for intermediate files and logs.
+All steps cache their outputs, so re-running with the same video skips completed work. Check `.work/` for intermediate files and `logs/` for per-run logs.
 
 ## Configuration
 
@@ -504,7 +504,7 @@ Each language has customizable translation and punctuation prompts. CJK language
 - **Audio Processing**: ffmpeg + ffprobe for format conversion and validation
 - **Flashcards**: genanki (Anki format generation)
 - **Language Support**: Full Unicode support with language-specific text processing
-- **Logging**: Timestamped JSON-friendly logs to LOGS_DIR/
+- **Logging**: Timestamped JSON-friendly logs to `logs/`
 
 ## Anki Deck Format
 
@@ -605,7 +605,7 @@ Edit translation and punctuation prompts in the Settings tab to customize how th
 
 ### Batch Processing Tips
 - **Large Playlists**: The app efficiently handles 50+ videos by reusing the TTS model
-- **Monitoring Progress**: Check `output/logs/` for detailed per-run logs in JSON format with metrics
+- **Monitoring Progress**: Check `logs/` for detailed per-run logs in JSON format with metrics
 - **Cache Reuse**: Intermediate files are cached intelligently; re-running skips completed steps
 - **Cancellation**: Press the cancel button to gracefully stop batch processing
 - **Per-run Logging**: Each run generates a timestamped log with stage labels, timing info, and error context
@@ -624,7 +624,7 @@ output/
 
 ### Caching & Working Directory
 - **Cache Location**: `.work/` directory
-- **Logs**: `.work/logs/` (timestamped JSON logs per run)
+- **Logs**: `logs/` (timestamped JSON logs per run)
 - **Clear Cache**: Use "Clear Cache" button to remove intermediate files
 - **Preserve Outputs**: Clearing cache does NOT delete final output files
 
@@ -659,5 +659,5 @@ changes focused, run the app once end to end, open a pull request.
 When reporting issues, include:
 - Operating system and Python version
 - Steps to reproduce the issue
-- Any error messages from the status area or `.work/logs/`
+- Any error messages from the status area or `logs/`
 - Whether the issue occurs on first run or after modifications

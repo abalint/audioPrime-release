@@ -2,26 +2,25 @@
 REM ============================================================================
 REM audioPrime  --  pull latest from GitHub and build the Windows app.
 REM
-REM Invoke over SSH from the Mac (same host/credentials as the transcribe box):
-REM     ssh <build-user>@<host> F:\audioPrime\pull_and_build.bat
+REM Intended for a dedicated, headless Windows build machine, invoked over SSH:
+REM     ssh <build-user>@<build-host> F:\audioPrime\pull_and_build.bat
 REM
-REM This box is treated as a BUILD SLAVE: it always resets its working tree to
-REM origin/main, discarding any local drift, so every build is reproducible.
-REM Auth for the private repo comes from the repo-local credential store file
-REM .git\build-credentials (git credential.helper = store --file=...), NOT from
-REM Git Credential Manager -- a headless service account has no access to the
-REM interactive user's GCM vault.
-REM credential.interactive is forced off so a headless run never hangs.
+REM The machine is treated as a BUILD SLAVE: it always resets its working tree
+REM to origin/main, discarding any local drift, so every build is reproducible.
+REM credential.interactive is forced off so a headless run never hangs on a
+REM credential prompt.
 REM
 REM safe.directory is passed on the command line rather than relied on from
-REM ~/.gitconfig: the repo lives on an exFAT volume, which reports every file's
-REM owner as "Everyone", so git's ownership check fails for every account. A
-REM non-interactive SSH session may not resolve HOME/USERPROFILE, in which case
+REM ~/.gitconfig: if the repo lives on an exFAT volume, every file's owner is
+REM reported as "Everyone" and git's ownership check fails. A non-interactive
+REM SSH session may also not resolve HOME/USERPROFILE, in which case
 REM ~/.gitconfig is never read and git aborts with "dubious ownership".
 REM
 REM vcvars64.bat is sourced because Nuitka shells out to MSVC cl.exe, which is
 REM only on PATH inside a Visual Studio developer environment -- an interactive
 REM desktop login gets that from the VS shortcuts, a headless SSH shell does not.
+REM
+REM Adjust REPO, PY, GIT and VCVARS below for your machine.
 REM ============================================================================
 
 setlocal

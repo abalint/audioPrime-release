@@ -28,7 +28,7 @@ redistributing.
 
 | Component | License | Source |
 |-----------|---------|--------|
-| ffmpeg / ffprobe | GPL (static builds) | evermeet.cx (macOS), johnvansickle.com (Linux), BtbN/FFmpeg-Builds (Windows). Invoked as separate processes. |
+| ffmpeg / ffprobe | GPL v3 (static builds) | Prebuilt binaries from ffmpeg.martin-riedl.de (macOS arm64, 1.0.0 ships ffmpeg 9.0.1), BtbN/FFmpeg-Builds (Windows, `ffmpeg-master-latest-win64-gpl`), johnvansickle.com (Linux, untested). Invoked as separate processes, never linked. Corresponding source: https://ffmpeg.org/download.html (git.ffmpeg.org/ffmpeg.git, matching release tag); each build host publishes its build scripts. |
 | yt-dlp (binary) | Unlicense | github.com/yt-dlp/yt-dlp |
 | quickjs-ng | MIT | github.com/quickjs-ng/quickjs |
 | Piper voice `en_US-amy-medium` and on-demand voices | Per-voice, see each MODEL_CARD | huggingface.co/rhasspy/piper-voices |

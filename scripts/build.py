@@ -131,9 +131,8 @@ def build() -> Path:
         # Ship only the default voice + its config; the rest download on demand.
         f"--include-data-files={VOICES_DIR / (BUNDLED_PIPER_VOICE + '.onnx')}=voices/{BUNDLED_PIPER_VOICE}.onnx",
         f"--include-data-files={VOICES_DIR / (BUNDLED_PIPER_VOICE + '.onnx.json')}=voices/{BUNDLED_PIPER_VOICE}.onnx.json",
-        # Only the frequency list and the voice catalog are read at runtime.
-        # Bundling all of data/ would sweep in the multi-GB irasutoya scrape and
-        # blow past codesign's command-line limit.
+        # Only the frequency list and the voice catalog are read at runtime;
+        # bundling all of data/ would also sweep in local scratch files.
         f"--include-data-files={DATA_DIR / 'ja_frequency.txt'}=data/ja_frequency.txt",
         f"--include-data-files={DATA_DIR / 'piper_voices.json'}=data/piper_voices.json",
         # Plugins
