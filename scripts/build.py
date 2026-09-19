@@ -217,6 +217,13 @@ def build() -> Path:
     # librosa crashes the Nuitka compiler so we ship its source .py files instead.
     _copy_excluded_packages(final_out)
 
+    # Copying files in after Nuitka's ad-hoc signing breaks the bundle seal
+    # ("a sealed resource is missing or invalid"), and Gatekeeper then reports
+    # a downloaded copy as damaged. Re-seal ad-hoc so the zip is launchable
+    # via right-click > Open.
+    if sys.platform == "darwin":
+        _reseal_adhoc(final_out)
+
     # Clean up Nuitka build cache
     build_cache = dist_dir / f"{nuitka_stem}.build"
     if build_cache.exists():
@@ -235,6 +242,21 @@ _EXCLUDED_PACKAGES = [
     "standard_sunau",
     "unidic_lite",
 ]
+
+
+def _reseal_adhoc(app_out: Path) -> None:
+    """Re-sign the bundle ad-hoc (identity "-") after post-build file copies."""
+    print("\nRe-sealing bundle (ad-hoc codesign)")
+    print("-" * 50)
+    subprocess.run(
+        ["codesign", "--force", "--deep", "--sign", "-", str(app_out)],
+        check=True,
+    )
+    subprocess.run(
+        ["codesign", "--verify", "--deep", "--strict", str(app_out)],
+        check=True,
+    )
+    print("  OK  bundle seal verified")
 
 
 def _copy_excluded_packages(app_out: Path) -> None:
