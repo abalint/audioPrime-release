@@ -1,5 +1,10 @@
 # Building audioPrime
 
+> Step-by-step from-scratch instructions for both platforms, and a table of
+> the macOS/Windows differences, are in the README under **Building a
+> Standalone App**. This file covers the maintainer workflow: branch policy,
+> the Windows build box, and what gets bundled.
+
 audioPrime ships as a standalone Nuitka build per platform:
 
 | Platform | Command | Output |
@@ -33,7 +38,7 @@ git checkout dev
 
 ---
 
-## Windows build slave
+## Windows build slave (maintainer setup)
 
 The Windows box is a **build slave**: `pull_and_build.bat` resets its working
 tree to `origin/main` on every run, discarding local drift, so builds are

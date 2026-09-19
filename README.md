@@ -16,9 +16,9 @@ A desktop application that automatically creates interleaved audio from videos a
 
 All core features are implemented and functional:
 - ✅ Single and batch video/audio processing
-- ✅ Multi-language support (32 languages with customizable AI prompts)
+- ✅ Multi-language support (33 languages, any as source or target, with customizable AI prompts)
 - ✅ Multi-site support (1000+ yt-dlp compatible sites)
-- ✅ Subtitle extraction and audio transcription (with ElevenLabs fallback)
+- ✅ Subtitle extraction and audio transcription (ElevenLabs, Soniox, or offline ReazonSpeech)
 - ✅ AI-powered translation and punctuation
 - ✅ TTS in the learner's language via Piper (offline) or OpenAI, Azure, Google, ElevenLabs (cloud)
 - ✅ Audio interleaving and mixing
@@ -30,7 +30,6 @@ All core features are implemented and functional:
 - ✅ Binary bundling support
 - ✅ Dark-mode UI with PySide6
 
-Currently in active development with focus on testing and optimization.
 
 ## Features
 
@@ -50,7 +49,7 @@ Currently in active development with focus on testing and optimization.
 
 ### Audio Processing
 - **Offline TTS**: Generates natural English text-to-speech using Piper (ONNX models, completely offline)
-- **5 Voice Options**: Amy (friendly), Lessac (expressive), LJSpeech (bright), Ryan (professional), Jenny (British)
+- **Piper Voices**: 166 offline voices across 45 languages, downloaded on demand (one voice, Amy, ships in the app)
 - **Speed Control**: Adjustable playback speed (25% - 300%)
 - **Audio Interleaving**: Creates alternating pattern: [English TTS] → [Original Audio] → [English TTS] → [Original Audio]
 - **Smart Merging**: Collapses short subtitle segments to enforce minimum 2-second audio duration
@@ -83,152 +82,179 @@ Currently in active development with focus on testing and optimization.
 - **Persistent Settings**: All preferences saved and restored on restart
 - **Comprehensive Logging**: Per-run JSON logs with timestamps, stages, and metrics for debugging
 
-## Installation
+## Installation (running from source)
 
 ### Prerequisites
 
-- **Python 3.9+**
-- **ffmpeg** (for audio processing and validation)
-- **OpenAI API key** (for translation and punctuation — ~$0.10-0.30 per 10-minute video)
-- **ElevenLabs API key** (optional, only for transcription fallback when videos lack subtitles)
+| Requirement | Notes |
+|---|---|
+| **Python 3.10 – 3.13** | `anthropic>=1.0` needs 3.10+. Nuitka's support for 3.14 is experimental (it builds, with warnings); 3.13 is the recommended pairing. The Windows release was built on 3.11.9, the macOS release on 3.14.6. |
+| **Git** | `requirements.txt` installs `reazonspeech-k2-asr` straight from GitHub. |
+| **ffmpeg / ffprobe** | Fetched by `scripts/fetch_binaries.py` (below). If you skip that step the app falls back to whatever is on your `PATH`. |
+| **API keys** | OpenAI **or** Anthropic for translation. Optional: ElevenLabs / Soniox (transcription), OpenAI / Azure / Google / ElevenLabs (cloud voices). Piper TTS needs none. |
 
 ### Setup
 
-1. **Clone the repository:**
-```bash
-git clone <repo-url>
-cd audioPrimeProd
-```
+1. **Clone the repository**
 
-2. **Create a virtual environment:**
-```bash
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-```
-
-3. **Install Python dependencies:**
-```bash
-pip install -r requirements.txt
-```
-
-4. **(Optional) Download bundled binaries:**
-```bash
-python scripts/fetch_binaries.py
-```
-This downloads precompiled `ffmpeg`, `piper`, and `yt-dlp` for your platform. If skipped, the app will use system-installed versions. Works with:
-- macOS (arm64, x86_64)
-- Linux (x86_64)
-- Windows (x86_64)
-
-5. **Place voice models in the `voices/` directory:**
-- Download `.onnx` and `.onnx.json` files from [Piper voice releases](https://github.com/rhasspy/piper/releases)
-- 5 voices are pre-configured: Amy, Lessac, LJSpeech, Ryan, Jenny
-- Example voice files:
-  - `en_US-amy-medium.onnx` + `en_US-amy-medium.onnx.json`
-  - `en_US-lessac-high.onnx` + `en_US-lessac-high.onnx.json`
-  - (repeat for other voices)
-
-## Building a Standalone App
-
-The build system uses [Nuitka](https://nuitka.net/) to compile audioPrime into a standalone application. The resulting binary contains native machine code (no `.pyc` bytecode) and bundles all dependencies, voice models, and platform binaries so end users don't need Python installed.
-
-### Prerequisites (All Platforms)
-
-1. **Python 3.9+** with a working venv
-2. **A C compiler** (see platform-specific notes below)
-3. **Nuitka**:
    ```bash
-   pip install nuitka
+   git clone https://github.com/abalint/audioPrime-release.git
+   cd audioPrime-release
    ```
-4. **All Python dependencies** installed:
+
+2. **Create and activate a virtual environment** (the build scripts assume it is named `.venv`)
+
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate        # Windows: .venv\Scripts\activate
+   ```
+
+3. **Install Python dependencies**
+
    ```bash
    pip install -r requirements.txt
    ```
-5. **Voice models** in `voices/` (`.onnx` + `.onnx.json` files)
-6. **Platform binaries** fetched:
+
+4. **Fetch platform binaries** (ffmpeg, ffprobe, yt-dlp, qjs) into `bin/<platform>/`
+
    ```bash
-   python scripts/fetch_binaries.py
+   python scripts/fetch_binaries.py         # macOS / Linux
+   python scripts\fetch_binaries_win.py     # Windows
    ```
 
-### macOS
+5. **Download the default Piper voice** into `voices/`. Only `en_US-amy-medium` is required; every other voice is downloaded by the app on first use.
 
-**Extra requirements**: Xcode Command Line Tools (provides `clang`).
+   ```bash
+   mkdir -p voices
+   curl -L -o voices/en_US-amy-medium.onnx \
+     https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx
+   curl -L -o voices/en_US-amy-medium.onnx.json \
+     https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx.json
+   ```
+
+   On Windows use `curl.exe` (ships with Windows 10+) or download the two files in a browser. Every other voice in `data/piper_voices.json` lives at the same Hugging Face path layout.
+
+6. **(Optional for running, required for building) Fetch the ReazonSpeech models** for offline Japanese transcription into `models/reazonspeech-k2-v2/`
+
+   ```bash
+   pip install huggingface_hub
+   python scripts/fetch_models.py
+   ```
+
+7. **Run**
+
+   ```bash
+   python main.py
+   ```
+
+   Output, cache, and logs are written next to the repo root: `output/`, `.work/`, `logs/`, `voices-downloaded/`. Settings and encrypted keys go to `~/.audioPrimeProd.json` and `~/.audioPrimeProd.key`.
+
+## Building a Standalone App
+
+The build uses [Nuitka](https://nuitka.net/) to compile the app and its Python dependencies to native code and bundle the binaries, models, and default voice so end users do not need Python. There is **one build script per platform**: `scripts/build.py` for macOS (and, untested, Linux) and `scripts/build_win.py` for Windows. They must be kept in sync when you change what gets bundled.
+
+### Prerequisites (both platforms)
+
+1. Everything from [Installation](#installation-running-from-source), including the default voice **and** the ReazonSpeech models. The preflight check aborts the build if either is missing.
+2. Nuitka in the same venv:
+
+   ```bash
+   pip install nuitka
+   ```
+
+3. A C compiler (see the platform sections).
+4. Network access. The build re-runs the binary fetch every time to pick up the latest yt-dlp and ffmpeg; if that fails it warns and continues with the binaries already in `bin/`.
+
+### macOS (Apple Silicon)
+
+Extra requirement: Xcode Command Line Tools, which provide `clang`.
 
 ```bash
-xcode-select --install   # if not already installed
+xcode-select --install          # once
+.venv/bin/python scripts/build.py
 ```
 
-**Build**:
+Output: `dist/audioPrime.app` (about 1.1 GB). Run it with `open dist/audioPrime.app`.
+
+The build script re-signs the bundle **ad-hoc** at the end. This is required because it copies `librosa` and `unidic_lite` into the bundle as source after Nuitka has signed it, which would otherwise break the bundle seal. There is no Developer ID signature and no notarization.
+
+To distribute the app, archive it with `ditto` so the signature survives. Do **not** use Python's `zipfile` or a plain `zip` that drops resource forks:
+
 ```bash
-python scripts/build.py
+cd dist
+ditto -c -k --sequesterRsrc --keepParent audioPrime.app audioPrime-macos-arm64.zip
 ```
 
-**Output**: `dist/audioPrime.app`
+Anyone who downloads that zip must clear the quarantine flag once before macOS will open an un-notarized app (right-click > Open no longer works on macOS 15+):
 
-**Run**:
 ```bash
-open dist/audioPrime.app
+xattr -dr com.apple.quarantine /Applications/audioPrime.app
 ```
 
-Or double-click `audioPrime.app` in Finder. Output files (audio, Anki decks) are written to an `output/` directory next to the `.app`, not inside the bundle.
+The build produces an arm64-only binary. Building on an Intel Mac has not been tested and there is no Intel release.
+
+### Windows 10/11 (x64)
+
+Extra requirement: a C compiler on `PATH`, either [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) with the "Desktop development with C++" workload or [MinGW-w64](https://www.mingw-w64.org/). The script passes `--assume-yes-for-downloads`, so Nuitka fetches any extra tooling it needs (for example Dependency Walker) without prompting.
+
+```bat
+.venv\Scripts\python.exe scripts\build_win.py
+```
+
+Output: `dist\audioPrime.dist\`, a folder containing `audioPrime.exe` and everything it needs. Zip the whole folder to distribute it; users unzip anywhere and run the exe. The console window is disabled, so nothing prints when the app is launched by double-click.
+
+If a previous `audioPrime.exe` is still running from `dist\`, the build stops it first, because Windows will not let Nuitka replace a locked executable.
+
+There is no code signing. SmartScreen warns on first launch; users choose "More info", then "Run anyway".
 
 ### Linux
 
-**Extra requirements**: `gcc` and development headers.
+`scripts/build.py` and `scripts/fetch_binaries.py` both branch on Linux (x86_64 and arm64 static ffmpeg from johnvansickle.com, `yt-dlp_linux`, `qjs-linux-*`) and would produce `dist/audioPrime.dist/main`. Nobody has run a Linux build of 1.0.0 and there is no Linux release, so treat it as a starting point rather than a supported target.
 
-```bash
-# Debian/Ubuntu
-sudo apt install gcc python3-dev
+### Differences between the macOS and Windows builds
 
-# Fedora
-sudo dnf install gcc python3-devel
-```
-
-**Build**:
-```bash
-python scripts/build.py
-```
-
-**Output**: `dist/main.dist/` (directory containing the `main` executable and all dependencies)
-
-**Run**:
-```bash
-./dist/main.dist/main
-```
-
-### Windows
-
-**Extra requirements**: A C compiler. The easiest option is [MinGW-w64](https://www.mingw-w64.org/) or [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) with the "Desktop development with C++" workload.
-
-**Build** (from a terminal with the compiler on PATH):
-```bash
-python scripts/build.py
-```
-
-**Output**: `dist\main.dist\` (directory containing `main.exe` and all dependencies)
-
-**Run**:
-```bash
-dist\main.dist\main.exe
-```
-
-### What Gets Bundled
-
-| Category | Source | Destination in bundle |
+| | macOS | Windows |
 |---|---|---|
-| Voice models | `voices/*.onnx`, `voices/*.onnx.json` | `voices/` |
-| Tool manifest | `update/tool_manifest.json` | `update/` |
-| Platform binaries | `bin/{platform}/ffmpeg`, `ffprobe`, `yt-dlp`, `piper` | `bin/{platform}/` |
-| Python deps | All packages from `requirements.txt` | Compiled to native C |
-| App source | All `src/**/*.py` + `main.py` | Compiled to native C |
+| Build script | `scripts/build.py` | `scripts/build_win.py` |
+| Binary fetch | `scripts/fetch_binaries.py`: ffmpeg/ffprobe from martin-riedl.de (native arm64), `yt-dlp_macos`, `qjs-darwin` | `scripts/fetch_binaries_win.py`: ffmpeg/ffprobe from BtbN FFmpeg-Builds, `yt-dlp.exe`, `qjs-windows-x86_64.exe` |
+| Binary directory | `bin/darwin_arm64/` | `bin/windows_x86_64/` |
+| Compiler | `clang` from Xcode Command Line Tools | MSVC Build Tools or MinGW-w64; Nuitka may download extra tools itself |
+| Nuitka output | `--macos-create-app-bundle` → `dist/audioPrime.app` | `--output-filename=audioPrime.exe` → `dist/audioPrime.dist/` folder |
+| Icon | `assets/audioPrime.icns` via `--macos-app-icon` | `assets/audioPrime.ico` via `--windows-icon-from-ico` |
+| Console | not applicable | hidden with `--windows-console-mode=disable` |
+| Bundled binaries | `--include-data-dir` for the whole `bin/darwin_arm64/` | each `.exe` added with `--include-data-files` (Nuitka 4 filters `.exe` out of data dirs) |
+| Post-build | copies `librosa` + `unidic_lite` source into `Contents/MacOS/`, then ad-hoc `codesign --force --deep` and verify | copies the same packages into the `.dist` folder; no signing |
+| Packaging | `ditto -c -k --sequesterRsrc --keepParent` (preserves the signature) | any zip of the `.dist` folder |
+| First launch for users | `xattr -dr com.apple.quarantine <app>` or "Open Anyway" in Privacy & Security | SmartScreen: More info → Run anyway |
+| Locked output handling | none needed | kills a running `audioPrime.exe` that holds `dist\` open |
+| Python used for 1.0.0 | 3.14.6 (Nuitka support experimental) | 3.11.9 |
+| Runtime data dirs | next to the `.app`: `output/`, `.work/`, `logs/`, `voices-downloaded/` | next to `audioPrime.exe`, same names |
 
-### Verifying the Build
+Everything else (Nuitka flags for excluded packages, the PySide6 plugin, the one bundled voice, the voice catalog, the ReazonSpeech models, `update/tool_manifest.json`, `data/ja_frequency.txt`) is identical on both platforms.
 
-1. Launch the app and confirm the UI appears (no terminal/Python needed)
-2. Select a voice — models should load from the bundled `voices/` directory
-3. Process a video — bundled `yt-dlp` and `ffmpeg` should be found automatically
-4. Check that output files land next to the app, not inside the bundle
-5. Confirm no `.pyc` or readable `.py` files exist inside the build output
+### What gets bundled
+
+| Category | Source in repo | Location in build |
+|---|---|---|
+| App source and Python dependencies | `main.py`, `src/`, everything in `requirements.txt` | compiled to native code (`openai` and `anthropic` are included whole because they import lazily) |
+| Packages Nuitka cannot compile | `librosa`, `lazy_loader`, `unidic_lite` | copied as source after the build |
+| Platform binaries | `bin/<platform>/` | `bin/<platform>/` |
+| Default Piper voice | `voices/en_US-amy-medium.onnx` + `.onnx.json` | `voices/` |
+| Piper voice catalog | `data/piper_voices.json` | `data/` |
+| Japanese frequency list | `data/ja_frequency.txt` | `data/` |
+| ReazonSpeech model | `models/reazonspeech-k2-v2/` | `models/` |
+| yt-dlp hotfix manifest | `update/tool_manifest.json` | `update/` |
+| Icons | `assets/` | `assets/` |
+
+The rest of `data/` and `voices/` is deliberately not bundled.
+
+### Verifying the build
+
+1. Launch the app without Python on `PATH` and confirm the UI appears.
+2. Pick a non-default Piper voice and confirm it downloads into `voices-downloaded/` next to the app.
+3. Process one video end to end. Bundled `yt-dlp` and `ffmpeg` should be found without anything installed on the system. On macOS, `lipo -archs dist/audioPrime.app/Contents/MacOS/bin/darwin_arm64/ffmpeg` should print `arm64` only; an `x86_64` ffmpeg runs under Rosetta and triggers the "support for Intel-based apps is ending" notice.
+4. Check that output files land next to the app, not inside the bundle.
+5. macOS only: `codesign --verify --deep --strict dist/audioPrime.app` must print nothing. If it reports "a sealed resource is missing or invalid", the reseal step did not run.
 
 ## Usage
 
@@ -456,17 +482,9 @@ python scripts/update_manifest.py --version <yt-dlp-version>
 
 ### Voice Models
 
-Five English voices are available:
+Piper voices are ONNX models from the [rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices) repository. The catalog in `data/piper_voices.json` lists 166 voices across 45 languages; regenerate it with `scripts/fetch_piper_catalog.py`. Only `en_US-amy-medium` ships in the app. When you pick any other Piper voice, `src/core/voice_manager.py` downloads it into `voices-downloaded/` next to the app and verifies its MD5. Piper has no voices for Japanese, Korean, Thai, Hebrew, Malay, or Cantonese; use a cloud engine for those target languages.
 
-| Voice | Region | Quality | Use Case |
-|-------|--------|---------|----------|
-| Amy | US | Medium | Clear, friendly delivery |
-| Lessac | US | High | Natural, expressive speech |
-| LJSpeech | US | High | Bright, energetic tone |
-| Ryan | US | High | Deep, professional voice |
-| Jenny | GB | Medium | British accent |
-
-All voices use Piper ONNX models for offline, privacy-friendly synthesis.
+Cloud voices (OpenAI, Azure Speech, Google Cloud, ElevenLabs) are listed from the provider's API once its key is entered and are cached in the settings file.
 
 ### Languages Supported
 
@@ -479,9 +497,9 @@ Each language has customizable translation and punctuation prompts. CJK language
 ## Technology Stack
 
 - **UI Framework**: PySide6 (Qt 6) with dark mode theming and collapsible sections
-- **TTS Engine**: Piper (ONNX runtime for offline synthesis)
-- **Translation & Punctuation**: OpenAI API with selectable models (gpt-4o-mini, gpt-4o, gpt-4.5-preview, gpt-4-turbo, o3-mini)
-- **Transcription Fallback**: ElevenLabs Scribe V2 API
+- **TTS Engines**: Piper (ONNX runtime, offline), OpenAI, Azure Speech, Google Cloud, ElevenLabs
+- **Translation & Punctuation**: OpenAI or Anthropic models, list fetched from the provider
+- **Transcription**: ElevenLabs Scribe V2, Soniox stt-async-v5, ReazonSpeech k2-v2 (offline, Japanese)
 - **Media Download**: yt-dlp (CLI) — supports 1000+ sites
 - **Audio Processing**: ffmpeg + ffprobe for format conversion and validation
 - **Flashcards**: genanki (Anki format generation)
@@ -510,17 +528,7 @@ python scripts/fetch_binaries.py
 ```
 
 ### "Voice models missing"
-Download voice models from [Piper GitHub releases](https://github.com/rhasspy/piper/releases):
-1. Download `.onnx` and `.onnx.json` files for your desired voices
-2. Place them in the `voices/` directory
-3. Files should be named like: `en_US-amy-medium.onnx`
-
-Pre-configured voice names:
-- `en_US-amy-medium.onnx`
-- `en_US-lessac-high.onnx`
-- `en_US-ljspeech-high.onnx`
-- `en_US-ryan-high.onnx`
-- `en_GB-jenny_dioco-medium.onnx`
+The app needs `voices/en_US-amy-medium.onnx` and `.onnx.json` next to the source tree (or inside the bundle). Download them with the `curl` commands in [Installation](#installation-running-from-source). Any other Piper voice downloads automatically on first use; if that fails, check your network and that `voices-downloaded/` next to the app is writable.
 
 ### "API Key Required" or "OpenAI Error"
 1. Get your API key at [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
