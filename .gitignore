@@ -4,7 +4,6 @@ __pycache__
 *.pyc
 .work
 logs
-build_slave.log
 output
 dist/
 .DS_Store
@@ -18,5 +17,3 @@ models/
 plans/
 nuitka-crash-report.xml
 .claude/
-_build_only.bat
-_detached_build.bat

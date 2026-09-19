@@ -2,8 +2,8 @@
 
 > Step-by-step from-scratch instructions for both platforms, and a table of
 > the macOS/Windows differences, are in the README under **Building a
-> Standalone App**. This file covers the maintainer workflow: branch policy,
-> the Windows build box, and what gets bundled.
+> Standalone App**. This file covers per-platform build notes, provisioning a
+> fresh build machine, and what gets bundled.
 
 audioPrime ships as a standalone Nuitka build per platform:
 
@@ -19,65 +19,21 @@ gets bundled in one, mirror it in the other. The shared constant is
 
 ---
 
-## Branch workflow
+## Windows build
 
-- Develop on **`dev`**.
-- The Windows build slave builds **`origin/main`**, not `dev`.
-- To release/build new work: merge `dev` → `main` and push before building.
-
-`main` is maintained by merging `dev` into it (merge commits), not by
-fast-forward. From a clean tree:
-
-```sh
-git checkout main
-git reset --hard origin/main      # discard any local drift on main
-git merge dev --no-edit           # creates a "Merge branch 'dev'" commit
-git push origin main
-git checkout dev
+```bat
+.venv\Scripts\python.exe scripts\build_win.py    REM -> dist\audioPrime.dist\
 ```
 
----
+Nuitka compiles with MSVC, so `cl.exe` must be on `PATH`. Run the build from a
+*Developer Command Prompt for VS 2022*, or source `vcvars64.bat` first:
 
-## Windows build slave (maintainer setup)
-
-The Windows box is a **build slave**: `pull_and_build.bat` resets its working
-tree to `origin/main` on every run, discarding local drift, so builds are
-reproducible.
-
-### Access — use the right user
-
-- SSH into the build box as the **same Windows user whose Credential Manager
-  holds the GitHub credentials**. Windows Credential Manager (`wincredman`) is
-  per-user and DPAPI-scoped, so a credential stored under one account is
-  invisible to any other. Building as a different service account fails at
-  `git fetch` with:
-
-  ```
-  fatal: Unable to persist credentials with the 'wincredman' credential store.
-  fatal: could not read Username for 'https://github.com': terminal prompts disabled
-  ```
-
-### One-command build
-
-```sh
-ssh <build-user>@<build-host> F:\audioPrime\pull_and_build.bat
+```bat
+call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
 ```
 
-`pull_and_build.bat` (in `F:\audioPrime`) does:
-
-1. `git -c credential.interactive=false fetch --prune origin` (non-interactive)
-2. `git reset --hard origin/main`
-3. `.venv\Scripts\python.exe scripts\build_win.py`
-
-Output lands in `F:\audioPrime\dist\audioPrime.dist`.
-
-### Box environment (reference)
-
-- Repo: `F:\audioPrime`
-- Python: `F:\audioPrime\.venv\Scripts\python.exe` (**3.11.9**)
-- Git: `C:\Program Files\Git\cmd\git.exe` (not on the default non-interactive
-  `PATH`; `pull_and_build.bat` calls it by full path)
-- Windows binaries already fetched into `bin\windows_x86_64\`
+`build_win.py` passes `--assume-yes-for-downloads` so Nuitka never blocks on a
+prompt in a non-interactive shell. Last verified with Python **3.11.9**.
 
 ---
 
@@ -88,11 +44,11 @@ Output lands in `F:\audioPrime\dist\audioPrime.dist`.
 ```
 
 Note: Nuitka 4.1.3 only *experimentally* supports Python 3.14 (it builds but
-warns; 3.13 is the recommended pairing). The Windows box is on 3.11.9.
+warns; 3.13 is the recommended pairing).
 
 ---
 
-## Provisioning a fresh build box
+## Provisioning a fresh build machine
 
 Large binaries and models are **gitignored** and fetched, not committed. On a
 new checkout, run these before the first build (all are one-time unless the
@@ -141,8 +97,7 @@ files above are included explicitly.
 
 | Symptom | Cause / fix |
 |---------|-------------|
-| `Unable to persist credentials with 'wincredman'` / `could not read Username` | SSH'd in as a Windows user other than the one holding the GitHub credential. |
 | Preflight `FAIL  Bundled voice present` | `voices/en_US-amy-medium.onnx` missing — download it. |
 | Preflight `FAIL  ReazonSpeech model files found` | run `scripts/fetch_models.py`. |
 | Preflight `FAIL  bin/... exists` | run `scripts/fetch_binaries.py` (or `_win`). |
-| Nuitka prompts for a tool download and hangs | Windows: `build_win.py` passes `--assume-yes-for-downloads` for headless runs. |
+| Nuitka prompts for a tool download and hangs | Windows: `build_win.py` passes `--assume-yes-for-downloads` for non-interactive runs. |

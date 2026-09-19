@@ -153,7 +153,7 @@ def build() -> Path:
         "-m",
         "nuitka",
         "--standalone",
-        # Headless build slave: auto-approve tool downloads (e.g. Dependency
+        # Non-interactive builds: auto-approve tool downloads (e.g. Dependency
         # Walker) instead of prompting, which fatals in non-interactive runs
         "--assume-yes-for-downloads",
         f"--output-dir={dist_dir}",
