@@ -165,6 +165,13 @@ def fetch_ytdlp(dest: Path, plat: str):
     out.write_bytes(data)
     _make_executable(out)
     print(f"  -> {out}")
+    # bin_paths.ytdlp_path() prefers a "yt-dlp_macos" sibling (written by the
+    # in-app updater) over "yt-dlp". Remove any leftover so a stale copy from a
+    # dev-box self-update can never shadow the fresh binary in the bundle.
+    stale = dest / "yt-dlp_macos"
+    if stale.exists():
+        stale.unlink()
+        print(f"  removed stale {stale}")
 
 
 def fetch_qjs(dest: Path, plat: str):
